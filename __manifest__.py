@@ -7,7 +7,7 @@ Manage Library
 ==============
 Description related to library.
     """,  # Supports reStructuredText(RST) format
-    'author': "Parth Gajjar",
+    'author': "Erik Spitzner",
     'website': "http://www.example.com",
     'category': 'Tools',
     'version': '14.0.1',
@@ -16,7 +16,8 @@ Description related to library.
     'data': [
         'security/groups.xml',
         'security/ir.model.access.csv',
-        'views/library_book.xml'
+        'views/library_book.xml',
+        'views/library_book_categ.xml'
     ],
 
     # This demo data files will be loaded if db initialize with demo data (commented because file is not added in this example)
@@ -24,6 +25,3 @@ Description related to library.
     #     'demo.xml'
     # ],
 }
-
-
-
