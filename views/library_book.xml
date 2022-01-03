@@ -16,6 +16,11 @@
         <field name="model">library.book</field>
         <field name="arch" type="xml">
             <form>
+                <button name="make_available" string="Make Available" type="object"/>
+                <button name="make_borrowed" string="Make Borrowed" type="object"/>
+                <button name="make_lost" string="Make Lost" type="object"/>
+                <field name="state" widget="statusbar"/>
+                <button name="log_all_library_members" string="Log Members" type="object"/>
                 <group>
                     <group>
                         <field name="name"/>

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, models, fields
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
+from odoo.tools.translate import _
 from datetime import timedelta
 
 
@@ -53,6 +54,12 @@ class LibraryBook(models.Model):
     publisher_id = fields.Many2one('res.partner', string='Publisher')
     publisher_city = fields.Char('Publisher City', related='publisher_id.city', readonly=True)
     ref_doc_id = fields.Reference(selection='_referencable_models', string='Reference Document')
+    state = fields.Selection([
+        ('draft', 'Unavailable'),
+        ('available', 'Available'),
+        ('borrowed', 'Borrowed'),
+        ('lost', 'Lost')],
+        'State', default="draft")
 
     _sql_constraints = [
         ('name_uniq', 'UNIQUE (name)', 'Book title must be unique.'),
@@ -80,6 +87,33 @@ class LibraryBook(models.Model):
         models = self.env['ir.model'].search([('field_id.name', '=', 'message_ids')])
         return [(x.model, x.name) for x in models]
 
+    @api.model
+    def is_allowed_transition(self, old_state, new_state):
+        allowed = [('draft', 'available'),
+                    ('available', 'borrowed'),
+                    ('borrowed', 'available'),
+                    ('available', 'lost'),
+                    ('borrowed', 'lost'),
+                    ('lost', 'available')]
+        return (old_state, new_state) in allowed
+
+    def change_state(self, new_state):
+        for book in self:
+            if book.is_allowed_transition(book.state, new_state):
+                book.state = new_state
+            else:
+                msg = _('Moving from %s to %s is not allowed') % (book.state, new_state)
+                raise UserError(msg)
+    
+    def make_available(self):
+        self.change_state('available')
+
+    def make_borrowed(self):
+        self.change_state('borrowed')
+
+    def make_lost(self):
+        self.change_state('lost')
+
     def _inverse_age(self):
         today = fields.Date.today()
         for book in self.filtered('date_release'):
@@ -96,6 +130,12 @@ class LibraryBook(models.Model):
         }
         new_op = operator_map.get(operator, operator)
         return [('date_release', new_op, value_date)]
+
+    def log_all_library_members(self):
+        library_member_model = self.env['library.member']
+        all_members = library_member_model.search([])
+        print("All Members:", all_members)
+        return True
 
 
 class ResPartner(models.Model):
